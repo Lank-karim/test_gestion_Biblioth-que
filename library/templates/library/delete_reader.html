@@ -1,0 +1,131 @@
+
+{% extends 'library/base.html' %}
+
+{% block title %}Supprimer {{ reader.name }} - Bibliothèque{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+   
+
+    <!-- Confirmation de suppression -->
+    <div class="card-abyss p-8 rounded-2xl border-l-4 border-error">
+        <div class="text-center mb-8">
+            <div class="avatar placeholder mb-4">
+                <div class="bg-error text-white rounded-2xl w-20 h-20">
+                    <i class="fas fa-user-times text-4xl"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-error">Supprimer ce lecteur ?</h1>
+            <p class="text-gray-500 mt-2">Cette action est irréversible</p>
+        </div>
+
+        <!-- Informations du lecteur -->
+        <div class="bg-base-300 p-6 rounded-xl mb-6">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="avatar placeholder">
+                    <div class="bg-gradient-to-br from-green-500 to-teal-600 text-white rounded-full w-16 h-16">
+                        <span class="text-2xl">{{ reader.name.0|upper }}</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-xl">{{ reader.name }}</h3>
+                    <p class="text-gray-500 flex items-center gap-2">
+                        <i class="fas fa-envelope"></i>
+                        {{ reader.email }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-500">Total réservations</p>
+                    <p class="text-2xl font-bold">{{ total_reservations }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Réservations actives</p>
+                    <p class="text-2xl font-bold {% if has_active_reservations %}text-error{% else %}text-success{% endif %}">
+                        {% if has_active_reservations %}
+                            {{ reader.reservations.filter.is_active.count }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            {% if has_active_reservations %}
+            <div class="alert alert-error mt-4">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    <h4 class="font-bold">Impossible de supprimer</h4>
+                    <p class="text-sm">Ce lecteur a des réservations actives. Veuillez les annuler avant de supprimer le compte.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if total_reservations > 0 and not has_active_reservations %}
+            <div class="alert alert-warning mt-4">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <h4 class="font-bold">Historique de réservations</h4>
+                    <p class="text-sm">Ce lecteur a {{ total_reservations }} réservation(s) dans l'historique. Ces données seront également supprimées.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if not has_active_reservations %}
+        <!-- Confirmation -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <h3 class="font-bold">Attention !</h3>
+                    <p class="text-sm">Vous êtes sur le point de supprimer définitivement ce lecteur et tout son historique. Cette action ne peut pas être annulée.</p>
+                </div>
+            </div>
+
+            <div class="form-control">
+                <label class="label cursor-pointer justify-start gap-4">
+                    <input type="checkbox" id="confirm-delete" class="checkbox checkbox-error" required />
+                    <span class="label-text">Je comprends que cette action est irréversible</span>
+                </label>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="flex gap-4">
+                <a href="{% url 'library:reader_detail' reader.id %}" class="btn btn-outline flex-1">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Annuler
+                </a>
+                <button type="submit" class="btn btn-error flex-1" id="delete-btn" disabled>
+                    <i class="fas fa-trash mr-2"></i>
+                    Supprimer définitivement
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <!-- Bouton retour si suppression impossible -->
+        <div class="flex justify-center">
+            <a href="{% url 'library:reader_detail' reader.id %}" class="btn btn-outline btn-wide">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Retour au profil
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if not has_active_reservations %}
+<script>
+document.getElementById('confirm-delete').addEventListener('change', function(e) {
+    document.getElementById('delete-btn').disabled = !e.target.checked;
+});
+</script>
+{% endif %}
+{% endblock %}

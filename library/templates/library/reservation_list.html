@@ -1,0 +1,237 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Liste des Réservations - Bibliothèque{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- En-tête -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-4xl font-bold flex items-center gap-3">
+                <i class="fas fa-bookmark text-orange-400"></i>
+                Réservations
+            </h1>
+            <p class="text-gray-500 mt-2">{{ page_obj.paginator.count }} réservation(s) au total</p>
+        </div>
+        <a href="{% url 'library:create_reservation' %}" class="btn btn-abyss">
+            <i class="fas fa-plus mr-2"></i>
+            Nouvelle réservation
+        </a>
+    </div>
+
+    <!-- Filtres et recherche -->
+    <div class="card-abyss p-6 rounded-2xl">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Recherche -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text"><i class="fas fa-search mr-2"></i>Rechercher</span>
+                </label>
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ search_query }}" 
+                    placeholder="Livre, auteur, lecteur..." 
+                    class="input input-abyss w-full"
+                >
+            </div>
+
+            <!-- Filtre statut -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text"><i class="fas fa-filter mr-2"></i>Statut</span>
+                </label>
+                <select name="status" class="select input-abyss w-full">
+                    <option value="">Tous les statuts</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actives</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Annulées</option>
+                </select>
+            </div>
+
+            <!-- Tri -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text"><i class="fas fa-sort mr-2"></i>Trier par</span>
+                </label>
+                <select name="sort" class="select input-abyss w-full">
+                    <option value="-reservation_date" {% if sort_by == '-reservation_date' %}selected{% endif %}>Plus récent</option>
+                    <option value="reservation_date" {% if sort_by == 'reservation_date' %}selected{% endif %}>Plus ancien</option>
+                    <option value="book__title" {% if sort_by == 'book__title' %}selected{% endif %}>Livre (A-Z)</option>
+                    <option value="reader__name" {% if sort_by == 'reader__name' %}selected{% endif %}>Lecteur (A-Z)</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-3 flex gap-2">
+                <button type="submit" class="btn btn-abyss flex-1">
+                    <i class="fas fa-filter mr-2"></i>
+                    Appliquer les filtres
+                </button>
+                <a href="{% url 'library:reservation_list' %}" class="btn btn-outline">
+                    <i class="fas fa-times mr-2"></i>
+                    Réinitialiser
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Liste des réservations -->
+    {% if page_obj %}
+    <div class="card-abyss rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-book mr-2"></i>Livre</th>
+                        <th><i class="fas fa-user mr-2"></i>Lecteur</th>
+                        <th><i class="fas fa-calendar mr-2"></i>Date réservation</th>
+                        <th><i class="fas fa-info-circle mr-2"></i>Statut</th>
+                        <th><i class="fas fa-calendar-times mr-2"></i>Date retour</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reservation in page_obj %}
+                    <tr class="hover">
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-blue-500 text-white rounded-lg w-12 h-12">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-bold">{{ reservation.book.title }}</div>
+                                    <div class="text-sm text-gray-500">{{ reservation.book.author }} ({{ reservation.book.year }})</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-green-500 text-white rounded-full w-10 h-10">
+                                        <span class="text-sm">{{ reservation.reader.name.0|upper }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">{{ reservation.reader.name }}</div>
+                                    <div class="text-sm text-gray-500">{{ reservation.reader.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ reservation.reservation_date|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if reservation.is_active %}
+                            <span class="badge badge-success gap-2">
+                                <i class="fas fa-check"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="badge badge-error gap-2">
+                                <i class="fas fa-times"></i> Annulée
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if reservation.cancelled_at %}
+                                {{ reservation.cancelled_at|date:"d/m/Y H:i" }}
+                            {% else %}
+                                <span class="text-gray-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <a href="{% url 'library:reservation_detail' reservation.id %}" class="btn btn-sm btn-ghost">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if reservation.is_active %}
+                                <button onclick="cancelReservation({{ reservation.id }})" class="btn btn-sm btn-error">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center mt-8">
+        <div class="join">
+            {% if page_obj.has_previous %}
+            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+               class="join-item btn btn-sm">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+               class="join-item btn btn-sm">
+                <i class="fas fa-angle-left"></i>
+            </a>
+            {% endif %}
+
+            <button class="join-item btn btn-sm btn-active">
+                Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </button>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+               class="join-item btn btn-sm">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+               class="join-item btn btn-sm">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="card-abyss p-12 rounded-2xl text-center">
+        <i class="fas fa-bookmark text-6xl text-gray-600 mb-4"></i>
+        <h3 class="text-2xl font-bold mb-2">Aucune réservation trouvée</h3>
+        <p class="text-gray-500 mb-6">Essayez de modifier vos critères de recherche</p>
+        <div class="flex gap-4 justify-center">
+            <a href="{% url 'library:reservation_list' %}" class="btn btn-outline">
+                <i class="fas fa-redo mr-2"></i>
+                Réinitialiser
+            </a>
+            <a href="{% url 'library:create_reservation' %}" class="btn btn-abyss">
+                <i class="fas fa-plus mr-2"></i>
+                Créer une réservation
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function cancelReservation(reservationId) {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
+        fetch(`/reservations/${reservationId}/cancel/`, {  // ✅ URL corrigée
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            alert("Erreur lors de l'annulation");
+        });
+    }
+}
+</script>
+
+{% endblock %}
+

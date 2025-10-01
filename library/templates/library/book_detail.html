@@ -1,0 +1,276 @@
+{% extends 'library/base.html' %}
+
+{% block title %}{{ book.title }} - Bibliothèque{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Breadcrumb -->
+    <div class="text-sm breadcrumbs">
+        <ul>
+            <li><a href="{% url 'library:home' %}"><i class="fas fa-home mr-2"></i>Accueil</a></li>
+            <li><a href="{% url 'library:book_list' %}"><i class="fas fa-book mr-2"></i>Livres</a></li>
+            <li>{{ book.title }}</li>
+        </ul>
+    </div>
+
+    <!-- En-tête avec actions -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-4xl font-bold flex items-center gap-3">
+                <i class="fas fa-book text-blue-400"></i>
+                {{ book.title }}
+            </h1>
+            <p class="text-gray-500 mt-2">{{ book.author }} • {{ book.year }}</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'library:edit_book' book.id %}" class="btn btn-abyss">
+                <i class="fas fa-edit mr-2"></i>
+                Modifier
+            </a>
+            <a href="{% url 'library:delete_book' book.id %}" class="btn btn-error">
+                <i class="fas fa-trash mr-2"></i>
+                Supprimer
+            </a>
+        </div>
+    </div>
+
+    <!-- Informations principales -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Carte du livre -->
+        <div class="lg:col-span-2">
+            <div class="card-abyss p-8 rounded-2xl">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="avatar placeholder shrink-0">
+                        <div class=" text-white rounded-2xl w-48 h-64 flex items-center justify-center"
+                                 style="background: linear-gradient(135deg, #0e9674ff 0%, #58fff1ff 100%);">
+                            <i class="fas fa-book text-7xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 space-y-4">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">{{ book.title }}</h3>
+                            <p class="text-lg text-gray-400">par {{ book.author }}</p>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">
+                                    <i class="fas fa-calendar mr-2"></i>Année de publication
+                                </p>
+                                <p class="text-lg font-semibold">{{ book.year }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">
+                                    <i class="fas fa-info-circle mr-2"></i>Statut
+                                </p>
+                                {% if is_available %}
+                                <span class="badge badge-success badge-lg gap-2">
+                                    <i class="fas fa-check"></i> Disponible
+                                </span>
+                                {% else %}
+                                <span class="badge badge-error badge-lg gap-2">
+                                    <i class="fas fa-lock"></i> Réservé
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">
+                                    <i class="fas fa-clock mr-2"></i>Ajouté le
+                                </p>
+                                <p class="text-sm">{{ book.created_at|date:"d/m/Y" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">
+                                    <i class="fas fa-edit mr-2"></i>Modifié le
+                                </p>
+                                <p class="text-sm">{{ book.updated_at|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+
+                        {% if is_available %}
+                        <div class="divider"></div>
+                        <a href="{% url 'library:create_reservation' %}?book={{ book.id }}" class="btn btn-abyss w-full">
+                            <i class="fas fa-bookmark mr-2"></i>
+                            Réserver ce livre
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Réservation actuelle -->
+        <div class="space-y-6">
+            {% if current_reservation %}
+            <div class="card-abyss p-6 rounded-2xl border-l-4 border-orange-500">
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-bookmark text-orange-400"></i>
+                    Réservation Actuelle
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm text-gray-500">Lecteur</p>
+                        <a href="{% url 'library:reader_detail' current_reservation.reader.id %}" class="font-semibold hover:text-blue-400">
+                            {{ current_reservation.reader.name }}
+                        </a>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Email</p>
+                        <p class="text-sm">{{ current_reservation.reader.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Date de réservation</p>
+                        <p class="text-sm">{{ current_reservation.reservation_date|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    {% if current_reservation.notes %}
+                    <div>
+                        <p class="text-sm text-gray-500">Notes</p>
+                        <p class="text-sm">{{ current_reservation.notes }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="flex gap-2 mt-4">
+                        <a href="{% url 'library:reservation_detail' current_reservation.id %}" class="btn btn-sm btn-outline flex-1">
+                            <i class="fas fa-eye mr-1"></i>
+                            Détails
+                        </a>
+                        <button onclick="cancelReservation({{ current_reservation.id }})" class="btn btn-sm btn-error">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card-abyss p-6 rounded-2xl text-center border-l-4 border-green-500">
+                <i class="fas fa-check-circle text-5xl text-green-400 mb-3"></i>
+                <h3 class="font-bold text-lg mb-2">Livre Disponible</h3>
+                <p class="text-sm text-gray-500 mb-4">Ce livre peut être réservé</p>
+                <a href="{% url 'library:create_reservation' %}?book={{ book.id }}" class="btn btn-abyss btn-sm w-full">
+                    <i class="fas fa-bookmark mr-2"></i>
+                    Réserver maintenant
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Statistiques du livre -->
+            <div class="card-abyss p-6 rounded-2xl">
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-purple-400"></i>
+                    Statistiques
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500">Total réservations</span>
+                        <span class="badge badge-lg">{{ reservations_history.count }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500">Réservations actives</span>
+                        <span class="badge badge-lg badge-warning">
+                            {% if current_reservation %}1{% else %}0{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historique des réservations -->
+    <div class="card-abyss p-6 rounded-2xl">
+        <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+            <i class="fas fa-history text-blue-400"></i>
+            Historique des Réservations
+        </h2>
+
+        {% if reservations_history %}
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-user mr-2"></i>Lecteur</th>
+                        <th><i class="fas fa-calendar mr-2"></i>Date réservation</th>
+                        <th><i class="fas fa-info-circle mr-2"></i>Statut</th>
+                        <th><i class="fas fa-calendar-times mr-2"></i>Date annulation</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reservation in reservations_history %}
+                    <tr class="hover">
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-blue-500 text-white rounded-lg w-10 h-10">
+                                        <span><i class="fas fa-user"></i></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">{{ reservation.reader.name }}</div>
+                                    <div class="text-sm text-gray-500">{{ reservation.reader.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ reservation.reservation_date|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if reservation.is_active %}
+                            <span class="badge badge-success gap-2">
+                                <i class="fas fa-check"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="badge badge-error gap-2">
+                                <i class="fas fa-times"></i> Annulée
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if reservation.cancelled_at %}
+                                {{ reservation.cancelled_at|date:"d/m/Y H:i" }}
+                            {% else %}
+                                <span class="text-gray-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'library:reservation_detail' reservation.id %}" class="btn btn-sm btn-ghost">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-inbox text-6xl mb-4"></i>
+            <p class="text-xl">Aucune réservation pour ce livre</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function cancelReservation(reservationId) {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
+        fetch(`/reservation/${reservationId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            alert('Erreur lors de l\'annulation');
+        });
+    }
+}
+</script>
+{% endblock %}

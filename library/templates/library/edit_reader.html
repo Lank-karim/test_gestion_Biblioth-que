@@ -1,0 +1,108 @@
+
+{% extends 'library/base.html' %}
+
+{% block title %}Modifier {{ reader.name }} - Bibliothèque{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <!-- Breadcrumb -->
+    <div class="text-sm breadcrumbs">
+        <ul>
+            <li><a href="{% url 'library:home' %}"><i class="fas fa-home mr-2"></i>Accueil</a></li>
+            <li><a href="{% url 'library:reader_list' %}"><i class="fas fa-users mr-2"></i>Lecteurs</a></li>
+            <li><a href="{% url 'library:reader_detail' reader.id %}">{{ reader.name }}</a></li>
+            <li>Modifier</li>
+        </ul>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="card-abyss p-8 rounded-2xl">
+        <div class="text-center mb-8">
+            <div class="avatar placeholder mb-4">
+                <div class="bg-gradient-to-br from-orange-500 to-red-600 text-white rounded-2xl w-20 h-20">
+                    <i class="fas fa-user-edit text-4xl"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold">Modifier le Lecteur</h1>
+            <p class="text-gray-500 mt-2">{{ reader.name }}</p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">
+                        <i class="fas fa-user mr-2 text-green-400"></i>Nom complet
+                    </span>
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <label class="label">
+                    <span class="label-text-alt text-error">{{ form.name.errors.0 }}</span>
+                </label>
+                {% else %}
+                <label class="label">
+                    <span class="label-text-alt text-gray-500">Nom et prénom du lecteur</span>
+                </label>
+                {% endif %}
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">
+                        <i class="fas fa-envelope mr-2 text-blue-400"></i>Adresse email
+                    </span>
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <label class="label">
+                    <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                </label>
+                {% else %}
+                <label class="label">
+                    <span class="label-text-alt text-gray-500">Email unique pour chaque lecteur</span>
+                </label>
+                {% endif %}
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="bg-base-300 p-4 rounded-xl">
+                <h3 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-info-circle text-blue-400"></i>
+                    Informations du compte
+                </h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-500">Membre depuis</p>
+                        <p class="font-semibold">{{ reader.created_at|date:"d/m/Y" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Dernière modification</p>
+                        <p class="font-semibold">{{ reader.updated_at|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="flex gap-4">
+                <button type="submit" class="btn btn-abyss flex-1">
+                    <i class="fas fa-save mr-2"></i>
+                    Sauvegarder les modifications
+                </button>
+                <a href="{% url 'library:reader_detail' reader.id %}" class="btn btn-outline">
+                    <i class="fas fa-times mr-2"></i>
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    input[type="text"], input[type="email"] {
+        @apply input input-abyss w-full;
+    }
+</style>
+{% endblock %}

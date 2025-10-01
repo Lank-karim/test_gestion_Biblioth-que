@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bibliothèque{% endblock %}</title>
+    
+    <!-- Tailwind CSS + DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --abyss-bg: #0d1117;
+            --abyss-surface: #161b22;
+            --abyss-border: #30363d;
+            --abyss-accent: #04b99bff;
+            --abyss-text: #c9d1d9;
+            --abyss-text-muted: #8b949e;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 100%);
+            min-height: 100vh;
+            color: var(--abyss-text);
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--abyss-surface);
+            border-right: 1px solid var(--abyss-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            color: var(--abyss-text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: var(--abyss-accent);
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .sidebar a i {
+            margin-right: 0.75rem;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .btn-abyss {
+            background: linear-gradient(135deg, #0e9674ff 0%, #58fff1ff 100%);
+            border: none;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .btn-abyss:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(11, 231, 202, 0.4);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <!-- Logo -->
+        <a href="{% url 'library:home' %}" class="mb-6 text-xl font-bold flex items-center">
+            <i class="fas fa-book-reader mr-2 text-blue-400"></i>
+            <span class="bg-gradient-to-r from-white to-white bg-clip-text text-transparent">Bibliothèque</span>
+        </a>
+
+        <!-- Menu -->
+        <nav class="flex-1">
+            <a href="{% url 'library:home' %}"
+               class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+               <i class="fas fa-home"></i>Accueil
+            </a>
+
+            <a href="{% url 'library:book_list' %}"
+               class="{% if request.resolver_match.url_name == 'book_list' %}active{% endif %}">
+               <i class="fas fa-book"></i>Livres
+            </a>
+
+            <a href="{% url 'library:reader_list' %}"
+               class="{% if request.resolver_match.url_name == 'reader_list' %}active{% endif %}">
+               <i class="fas fa-users"></i>Lecteurs
+            </a>
+        
+            <a href="{% url 'library:reservation_list' %}"
+               class="{% if request.resolver_match.url_name == 'reservation_list' %}active{% endif %}">
+               <i class="fas fa-bookmark"></i>Réservations
+            </a>
+
+            <a href="{% url 'library:statistics' %}"
+               class="{% if request.resolver_match.url_name == 'statistics' %}active{% endif %}">
+               <i class="fas fa-chart-bar"></i>Statistiques
+            </a>
+        </nav>
+
+        <!-- Boutons rapides -->
+        <div class="mt-6 flex flex-col gap-2">
+            <a href="{% url 'library:add_book' %}" class="btn btn-sm btn-abyss w-full">
+                <i class="fas fa-plus mr-1"></i>Livre
+            </a>
+            <a href="{% url 'library:add_reader' %}" class="btn btn-sm btn-abyss w-full">
+                <i class="fas fa-user-plus mr-1"></i>Lecteur
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+        <!-- Messages Flash -->
+        {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 mt-4">
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} mb-2">
+                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Contenu principal -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer footer-center p-10  text-base-content rounded mt-16">
+            <div>
+                <i class="fas fa-book-open text-4xl text-blue-400"></i>
+                <p class="font-bold text-lg">
+                    Système de Gestion de Bibliothèque
+                </p>
+                
+                <p class="text-xs mt-2 text-gray-600">
+                    © 2025 - Tous droits réservés
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

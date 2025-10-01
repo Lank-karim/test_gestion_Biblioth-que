@@ -1,0 +1,152 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Statistiques - Bibliothèque{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+    <!-- Titre -->
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-blue-400 mb-2">
+            <i class="fas fa-chart-line mr-2"></i> Tableau de Bord - Statistiques
+        </h1>
+        <p class="text-gray-400">Aperçu global de l’activité de la bibliothèque</p>
+    </div>
+
+    <!-- Statistiques globales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="card bg-base-200 shadow-xl p-6 text-center">
+            <i class="fas fa-book text-4xl text-blue-400 mb-3"></i>
+            <h2 class="font-bold text-lg">Livres</h2>
+            <p class="text-2xl font-extrabold">{{ stats.total_books }}</p>
+        </div>
+
+        <div class="card bg-base-200 shadow-xl p-6 text-center">
+            <i class="fas fa-users text-4xl text-green-400 mb-3"></i>
+            <h2 class="font-bold text-lg">Lecteurs</h2>
+            <p class="text-2xl font-extrabold">{{ stats.total_readers }}</p>
+        </div>
+
+        <div class="card bg-base-200 shadow-xl p-6 text-center">
+            <i class="fas fa-bookmark text-4xl text-purple-400 mb-3"></i>
+            <h2 class="font-bold text-lg">Réservations</h2>
+            <p class="text-2xl font-extrabold">{{ stats.total_reservations }}</p>
+        </div>
+
+        <div class="card bg-base-200 shadow-xl p-6 text-center">
+            <i class="fas fa-clock text-4xl text-yellow-400 mb-3"></i>
+            <h2 class="font-bold text-lg">Actives</h2>
+            <p class="text-2xl font-extrabold">{{ stats.active_reservations }}</p>
+        </div>
+    </div>
+
+    <!-- Graphique & Stats récentes -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Graphique -->
+        <div class="card bg-base-200 shadow-xl p-6">
+            <h2 class="font-bold text-lg mb-4">
+                <i class="fas fa-chart-bar text-blue-400 mr-2"></i>
+                Réservations des 6 derniers mois
+            </h2>
+            <canvas id="monthlyChart" class="w-full h-64"></canvas>
+        </div>
+
+        <!-- Réservations récentes -->
+        <div class="card bg-base-200 shadow-xl p-6">
+            <h2 class="font-bold text-lg mb-4">
+                <i class="fas fa-history text-orange-400 mr-2"></i>
+                Réservations récentes
+            </h2>
+            <p class="text-5xl font-extrabold text-orange-400">{{ recent_reservations }}</p>
+            <p class="text-gray-400 mt-2">dans les 30 derniers jours</p>
+        </div>
+    </div>
+
+    <!-- Livres populaires -->
+    <div class="card bg-base-200 shadow-xl p-6">
+        <h2 class="font-bold text-lg mb-4">
+            <i class="fas fa-star text-yellow-400 mr-2"></i>
+            Livres les plus populaires
+        </h2>
+        <table class="table w-full">
+            <thead>
+                <tr class="text-gray-400">
+                    <th>#</th>
+                    <th>Titre</th>
+                    <th>Auteur</th>
+                    <th>Réservations</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in popular_books %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.author }}</td>
+                    <td class="font-bold text-blue-400">{{ book.reservation_count }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-gray-500">Aucun livre réservé</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Lecteurs actifs -->
+    <div class="card bg-base-200 shadow-xl p-6">
+        <h2 class="font-bold text-lg mb-4">
+            <i class="fas fa-user-check text-green-400 mr-2"></i>
+            Lecteurs les plus actifs
+        </h2>
+        <table class="table w-full">
+            <thead>
+                <tr class="text-gray-400">
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Réservations</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reader in active_readers %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ reader.name }}</td>
+                    <td>{{ reader.email }}</td>
+                    <td class="font-bold text-green-400">{{ reader.reservation_count }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-gray-500">Aucun lecteur actif</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('monthlyChart').getContext('2d');
+    const monthlyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for m in monthly_reservations %}'{{ m.month|date:"M Y" }}',{% endfor %}],
+            datasets: [{
+                label: 'Réservations',
+                data: [{% for m in monthly_reservations %}{{ m.count }},{% endfor %}],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                fill: true,
+                tension: 0.3,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+</script>
+{% endblock %}

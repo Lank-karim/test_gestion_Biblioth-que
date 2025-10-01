@@ -1,0 +1,172 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Accueil - Bibliothèque{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Hero Section -->
+    <div class="hero min-h-[300px] rounded-3xl" style="background: linear-gradient(135deg, rgba(31, 111, 235, 0.2) 0%, rgba(88, 166, 255, 0.1) 100%);">
+        <div class="hero-content text-center">
+            <div class="max-w-md">
+                <i class="fas fa-book-reader text-7xl mb-4 text-blue-400"></i>
+                <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    Bienvenue
+                </h1>
+                <p class="py-6 text-lg text-gray-400">
+                    Gérez facilement votre collection de livres, vos lecteurs et leurs réservations
+                </p>
+                <div class="flex gap-4 justify-center">
+                    <a href="{% url 'library:create_reservation' %}" class="btn btn-abyss">
+                        <i class="fas fa-bookmark mr-2"></i>
+                        Nouvelle Réservation
+                    </a>
+                    <a href="{% url 'library:book_list' %}" class="btn btn-outline btn-primary">
+                        <i class="fas fa-search mr-2"></i>
+                        Parcourir les livres
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques globales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-abyss">
+            
+            <i class="fas fa-book text-4xl stat-figure text-blue-400"></i>
+            
+            <div class="stat-title text-gray-500">Total Livres</div>
+            <div class="stat-value text-blue-400">{{ total_books }}</div>
+            <div class="stat-desc text-gray-600">Dans la bibliothèque</div>
+        </div>
+
+        <div class="stat-abyss">
+            <i class="fas fa-users text-4xl stat-figure text-green-400"></i>
+            
+            <div class="stat-title text-gray-500">Total Lecteurs</div>
+            <div class="stat-value text-green-400">{{ total_readers }}</div>
+            <div class="stat-desc text-gray-600">Membres inscrits</div>
+        </div>
+
+        <div class="stat-abyss">
+            <i class="fas fa-bookmark text-4xl stat-figure text-orange-400"></i>
+            <div class="stat-title text-gray-500">Réservations Actives</div>
+            <div class="stat-value text-orange-400">{{ active_reservations }}</div>
+            <div class="stat-desc text-gray-600">En cours</div>
+        </div>
+
+        <div class="stat-abyss">
+            
+            <i class="fas fa-check-circle text-4xl stat-figure text-purple-400"></i>
+            <div class="stat-title text-gray-500">Livres Disponibles</div>
+            <div class="stat-value text-purple-400">{{ available_books }}</div>
+            <div class="stat-desc text-gray-600">Prêts à emprunter</div>
+        </div>
+    </div>
+
+    <!-- Réservations récentes -->
+    <div class="card-abyss p-6 rounded-2xl">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold flex items-center gap-3">
+                <i class="fas fa-clock text-blue-400"></i>
+                Réservations Récentes
+            </h2>
+            <a href="{% url 'library:reservation_list' %}" class="btn btn-sm btn-ghost text-blue-400">
+                Voir tout <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+
+        {% if recent_reservations %}
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-book mr-2"></i>Livre</th>
+                        <th><i class="fas fa-user mr-2"></i>Lecteur</th>
+                        <th><i class="fas fa-calendar mr-2"></i>Date</th>
+                        <th><i class="fas fa-info-circle mr-2"></i>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reservation in recent_reservations %}
+                    <tr class="hover">
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-blue-500 text-white rounded-lg w-12 h-12">
+                                        <span class="text-xl"><i class="fas fa-book"></i></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-bold">{{ reservation.book.title }}</div>
+                                    <div class="text-sm text-gray-500">{{ reservation.book.author }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="font-semibold">{{ reservation.reader.name }}</div>
+                            <div class="text-sm text-gray-500">{{ reservation.reader.email }}</div>
+                        </td>
+                        <td>{{ reservation.reservation_date|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if reservation.is_active %}
+                            <span class="badge badge-success gap-2">
+                                <i class="fas fa-check"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="badge badge-error gap-2">
+                                <i class="fas fa-times"></i> Annulée
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% comment %} <a href="{% url 'reservation_detail' reservation.id %}" class="btn btn-sm btn-ghost"> {% endcomment %}
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-inbox text-6xl mb-4"></i>
+            <p class="text-xl">Aucune réservation récente</p>
+            <a href="library/templates/library/create_reservation.html" class="btn btn-abyss mt-4">
+                <i class="fas fa-plus mr-2"></i>
+                Créer une réservation
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{% url 'library:add_book' %}" class="card-abyss p-6 rounded-2xl hover:scale-105 transition-transform">
+            <div class="text-center">
+                <i class="fas fa-book-medical text-5xl text-blue-400 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Ajouter un Livre</h3>
+                <p class="text-gray-500">Enrichissez votre collection</p>
+            </div>
+        </a>
+
+        <a href="{% url 'library:add_reader' %}" class="card-abyss p-6 rounded-2xl hover:scale-105 transition-transform">
+            <div class="text-center">
+                <i class="fas fa-user-plus text-5xl text-green-400 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Ajouter un Lecteur</h3>
+                <p class="text-gray-500">Inscrivez un nouveau membre</p>
+            </div>
+        </a>
+
+        <a href="{% url 'library:statistics' %}" class="card-abyss p-6 rounded-2xl hover:scale-105 transition-transform">
+            <div class="text-center">
+                <i class="fas fa-chart-line text-5xl text-purple-400 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Voir les Statistiques</h3>
+                <p class="text-gray-500">Analysez vos données</p>
+            </div>
+        </a> 
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,211 @@
+
+{% extends 'library/base.html' %}
+
+{% block title %}Réservation #{{ reservation.id }} - Bibliothèque{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <!-- Breadcrumb -->
+    {% comment %} <div class="text-sm breadcrumbs">
+        <ul>
+            <li><a href="{% url 'home' %}"><i class="fas fa-home mr-2"></i>Accueil</a></li>
+            <li><a href="{% url 'reservation_list' %}"><i class="fas fa-bookmark mr-2"></i>Réservations</a></li>
+            <li>Réservation #{{ reservation.id }}</li>
+        </ul>
+    </div> {% endcomment %}
+
+    <!-- En-tête avec statut -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-4xl font-bold flex items-center gap-3">
+                <i class="fas fa-bookmark text-orange-400"></i>
+                Réservation #{{ reservation.id }}
+            </h1>
+            <p class="text-gray-500 mt-2">
+                Créée le {{ reservation.reservation_date|date:"d/m/Y à H:i" }}
+            </p>
+        </div>
+        <div>
+            {% if reservation.is_active %}
+            <span class="badge badge-success badge-lg gap-2">
+                <i class="fas fa-check"></i> Active
+            </span>
+            {% else %}
+            <span class="badge badge-error badge-lg gap-2">
+                <i class="fas fa-times"></i> Annulée
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Informations de la réservation -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Informations du livre -->
+        <div class="card-abyss p-6 rounded-2xl">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <i class="fas fa-book text-blue-400"></i>
+                Livre Réservé
+            </h2>
+            <div class="flex items-start gap-4">
+                <div class="avatar placeholder shrink-0">
+                    <div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl w-24 h-32 flex items-center justify-center">
+                        <i class="fas fa-book text-4xl"></i>
+                    </div>
+                </div>
+                <div class="flex-1 space-y-3">
+                    <div>
+                        <h3 class="text-xl font-bold">{{ reservation.book.title }}</h3>
+                        <p class="text-gray-400">par {{ reservation.book.author }}</p>
+                    </div>
+                    <div class="divider my-2"></div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                            <p class="text-gray-500">Année</p>
+                            <p class="font-semibold">{{ reservation.book.year }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Statut actuel</p>
+                            {% if reservation.book.is_available %}
+                            <span class="badge badge-success badge-sm">Disponible</span>
+                            {% else %}
+                            <span class="badge badge-error badge-sm">Réservé</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'library:book_detail' reservation.book.id %}" class="btn btn-sm btn-abyss w-full mt-4">
+                        <i class="fas fa-eye mr-2"></i>
+                        Voir le livre
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations du lecteur -->
+        <div class="card-abyss p-6 rounded-2xl">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <i class="fas fa-user text-green-400"></i>
+                Lecteur
+            </h2>
+            <div class="flex items-start gap-4">
+                <div class="avatar placeholder shrink-0">
+                    <div class="bg-gradient-to-br from-green-500 to-teal-600 text-white rounded-full w-20 h-20 flex items-center justify-center">
+                        <span class="text-3xl font-bold">{{ reservation.reader.name.0|upper }}</span>
+                    </div>
+                </div>
+                <div class="flex-1 space-y-3">
+                    <div>
+                        <h3 class="text-xl font-bold">{{ reservation.reader.name }}</h3>
+                        <p class="text-gray-400 flex items-center gap-2">
+                            <i class="fas fa-envelope"></i>
+                            {{ reservation.reader.email }}
+                        </p>
+                    </div>
+                    <div class="divider my-2"></div>
+                    <div class="text-sm">
+                        <p class="text-gray-500">Membre depuis</p>
+                        <p class="font-semibold">{{ reservation.reader.created_at|date:"d/m/Y" }}</p>
+                    </div>
+                    <a href="{% url 'library:reader_detail' reservation.reader.id %}" class="btn btn-sm btn-abyss w-full mt-4">
+                        <i class="fas fa-eye mr-2"></i>
+                        Voir le profil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Détails de la réservation -->
+    <div class="card-abyss p-6 rounded-2xl">
+        <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+            <i class="fas fa-info-circle text-purple-400"></i>
+            Détails de la Réservation
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="stat-abyss">
+                    <i class="fas fa-calendar-plus text-3xl stat-figure text-blue-400"></i>
+                
+                <div class="stat-title">Date de réservation</div>
+                <div class="stat-value text-lg">{{ reservation.reservation_date|date:"d/m/Y" }}</div>
+                <div class="stat-desc">{{ reservation.reservation_date|date:"H:i" }}</div>
+            </div>
+
+            {% if reservation.cancelled_at %}
+            <div class="stat-abyss">
+                    <i class="fas fa-calendar-times text-3xl stat-figure text-red-400"></i>
+                
+                <div class="stat-title">Date d'annulation</div>
+                <div class="stat-value text-lg">{{ reservation.cancelled_at|date:"d/m/Y" }}</div>
+                <div class="stat-desc">{{ reservation.cancelled_at|date:"H:i" }}</div>
+            </div>
+            {% endif %}
+
+            <div class="stat-abyss">
+                    <i class="stat-figure {% if reservation.is_active %}text-green-400{% else %}text-red-400{% endif %} fas {% if reservation.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %} text-3xl"></i>
+                <div class="stat-title">Statut</div>
+                <div class="stat-value text-lg">
+                    {% if reservation.is_active %}Active{% else %}Annulée{% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if reservation.notes %}
+        <div class="divider"></div>
+        <div class="bg-base-300 p-4 rounded-xl">
+            <h3 class="font-bold mb-2 flex items-center gap-2">
+                <i class="fas fa-sticky-note text-yellow-400"></i>
+                Notes
+            </h3>
+            <p class="text-gray-400">{{ reservation.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Actions -->
+    {% if reservation.is_active %}
+    <div class="card-abyss p-6 rounded-2xl border-l-4 border-warning">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <i class="fas fa-tools text-yellow-400"></i>
+            Actions
+        </h2>
+        <p class="text-gray-400 mb-4">Cette réservation est active. Vous pouvez l'annuler si nécessaire.</p>
+        <button onclick="cancelReservation({{ reservation.id }})" class="btn btn-error">
+            <i class="fas fa-times mr-2"></i>
+            Annuler cette réservation
+        </button>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <h3 class="font-bold">Réservation annulée</h3>
+            <p class="text-sm">Cette réservation a été annulée le {{ reservation.cancelled_at|date:"d/m/Y à H:i" }}</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function cancelReservation(reservationId) {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?\n\nLe livre deviendra immédiatement disponible pour d\'autres réservations.')) {
+        fetch(`/reservation/${reservationId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Erreur: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Erreur lors de l\'annulation de la réservation');
+        });
+    }
+}
+</script>
+{% endblock %}
