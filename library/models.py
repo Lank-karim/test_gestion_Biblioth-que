@@ -54,8 +54,6 @@ class Book(models.Model):
         """Retourne la réservation active du livre, s'il y en a une."""
         return self.reservations.filter(is_active=True).first()
 
-       return self.reservations.count()
-
 class Reader(models.Model):
     """Représente un lecteur de la bibliothèque."""
     name = models.CharField(
