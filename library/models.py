@@ -54,11 +54,10 @@ class Book(models.Model):
         """Retourne la réservation active du livre, s'il y en a une."""
         return self.reservations.filter(is_active=True).first()
 
+       return self.reservations.count()
 
 class Reader(models.Model):
-    """
-    Représente un lecteur de la bibliothèque.
-    """
+    """Représente un lecteur de la bibliothèque."""
     name = models.CharField(
         max_length=100,
         verbose_name="Nom complet",
@@ -68,7 +67,6 @@ class Reader(models.Model):
         unique=True,
         verbose_name="Email",
         help_text="Adresse email du lecteur (unique)",
-        validators=[EmailValidator()]
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -85,10 +83,21 @@ class Reader(models.Model):
     def __str__(self):
         return f"{self.name} ({self.email})"
     
-    def clean(self):
-        """Normalise l'email en minuscules et supprime les espaces inutiles."""
+    def clean_fields(self, exclude=None):
+        """Nettoie les champs AVANT leur validation (important pour l'email)."""
         if self.email:
-            self.email = self.email.lower().strip()
+            self.email = self.email.strip().lower()
+        super().clean_fields(exclude=exclude)
+
+    def clean(self):
+        """Logique de validation personnalisée (aucune pour l’instant)."""
+        super().clean()
+    
+    def save(self, *args, **kwargs):
+        """Assure que l'email est toujours normalisé avant l'enregistrement."""
+        if self.email:
+            self.email = self.email.strip().lower()
+        super().save(*args, **kwargs)
     
     def get_active_reservations(self):
         """Retourne toutes les réservations actives de ce lecteur."""
@@ -159,6 +168,15 @@ class Reservation(models.Model):
     def clean(self):
         """Validation avant la sauvegarde."""
         if self.pk is None:  # Nouvelle réservation
+            # Vérifier que book et reader existent avant de les utiliser
+            if not hasattr(self, 'book') or self.book is None:
+                # Si book n'est pas défini, Django le validera automatiquement
+                return
+            
+            if not hasattr(self, 'reader') or self.reader is None:
+                # Si reader n'est pas défini, Django le validera automatiquement
+                return
+            
             # Vérifie qu'aucune réservation active n'existe déjà pour ce livre
             if Reservation.objects.filter(book=self.book, is_active=True).exists():
                 existing = Reservation.objects.get(book=self.book, is_active=True)

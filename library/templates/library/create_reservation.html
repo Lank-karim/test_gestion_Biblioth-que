@@ -1,4 +1,152 @@
+{% extends 'library/base.html' %}
 
+{% block title %}Créer une Réservation - Bibliothèque{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8 px-4">
+
+    <!-- Header -->
+    <div class="text-center">
+        <div class="avatar placeholder mb-4 mx-auto">
+            <div class="bg-gradient-to-br from-orange-500 to-red-600 text-white rounded-3xl w-24 h-24 flex items-center justify-center">
+                <i class="fas fa-bookmark text-5xl"></i>
+            </div>
+        </div>
+        <h1 class="text-4xl font-bold mb-2">Nouvelle Réservation</h1>
+        <p class="text-gray-500 text-lg">Réservez un livre pour un lecteur</p>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="card-abyss p-10 rounded-3xl shadow-lg border border-gray-200">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Sélection du livre -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold text-lg flex items-center gap-2">
+                        <i class="fas fa-book text-blue-500"></i> Sélectionner un livre
+                    </span>
+                </label>
+                {{ form.book }}
+                {% if form.book.errors %}
+                <span class="text-error text-sm mt-1">{{ form.book.errors.0 }}</span>
+                {% else %}
+                <span class="text-gray-400 text-sm mt-1 flex items-center gap-1">
+                    <i class="fas fa-info-circle"></i> Seuls les livres disponibles sont affichés
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Sélection du lecteur -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold text-lg flex items-center gap-2">
+                        <i class="fas fa-user text-green-500"></i> Sélectionner un lecteur
+                    </span>
+                </label>
+                {{ form.reader }}
+                {% if form.reader.errors %}
+                <span class="text-error text-sm mt-1">{{ form.reader.errors.0 }}</span>
+                {% else %}
+                <span class="text-gray-400 text-sm mt-1 flex items-center gap-1">
+                    <i class="fas fa-info-circle"></i> Le lecteur ne doit pas avoir de réservation active
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Notes optionnelles -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold text-lg flex items-center gap-2">
+                        <i class="fas fa-sticky-note text-purple-500"></i> Notes (optionnel)
+                    </span>
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                <span class="text-error text-sm mt-1">{{ form.notes.errors.0 }}</span>
+                {% else %}
+                <span class="text-gray-400 text-sm mt-1">Informations supplémentaires sur la réservation</span>
+                {% endif %}
+            </div>
+
+            <!-- Informations importantes -->
+            <div class="alert alert-info shadow-lg">
+                <i class="fas fa-info-circle mr-2"></i>
+                <div>
+                    <h4 class="font-bold">À savoir</h4>
+                    <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                        <li>Un livre ne peut être réservé que par un seul lecteur à la fois</li>
+                        <li>Un lecteur ne peut avoir qu'une seule réservation active</li>
+                        <li>Vous pouvez annuler une réservation à tout moment</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="divider my-4"></div>
+
+            <div class="flex flex-col md:flex-row gap-4">
+                <button type="submit" class="btn btn-abyss flex-1">
+                    <i class="fas fa-check mr-2"></i> Créer la réservation
+                </button>
+                <a href="{% url 'library:reservation_list' %}" class="btn btn-outline flex-1">
+                    <i class="fas fa-times mr-2"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Livres disponibles -->
+    {% if available_books %}
+    <div class="card-abyss p-6 rounded-3xl shadow-lg border border-gray-200">
+        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+            <i class="fas fa-book text-blue-500"></i> Livres Disponibles ({{ available_books.count }})
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for book in available_books|slice:":6" %}
+            <div class="bg-base-300 p-4 rounded-xl hover:bg-base-200 transition-all shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="avatar placeholder">
+                        <div class="bg-blue-500 text-white rounded-lg w-12 h-12 flex items-center justify-center">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-sm truncate">{{ book.title }}</h4>
+                        <p class="text-xs text-gray-500 truncate">{{ book.author }}</p>
+                        <p class="text-xs text-gray-600">{{ book.year }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if available_books.count > 6 %}
+        <div class="text-center mt-4">
+            <a href="{% url 'library:book_list' %}?available=true" class="btn btn-sm btn-ghost">
+                <i class="fas fa-eye mr-2"></i> Voir tous les livres disponibles
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    select, textarea {
+        @apply input-abyss w-full;
+    }
+    select {
+        @apply select;
+    }
+    textarea {
+        @apply textarea textarea-bordered min-h-[100px];
+    }
+</style>
+{% endblock %}
+
+
+
+{% comment %} 
 {% extends 'library/base.html' %}
 
 {% block title %}Créer une Réservation - Bibliothèque{% endblock %}
@@ -162,4 +310,4 @@
         min-height: 100px;
     }
 </style>
-{% endblock %}
+{% endblock %} {% endcomment %}
